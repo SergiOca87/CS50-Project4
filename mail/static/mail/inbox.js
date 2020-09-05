@@ -5,6 +5,7 @@ document.addEventListener('DOMContentLoaded', function() {
   document.querySelector('#sent').addEventListener('click', () => load_mailbox('sent'));
   document.querySelector('#archived').addEventListener('click', () => load_mailbox('archive'));
   document.querySelector('#compose').addEventListener('click', compose_email);
+  document.querySelector('#compose-form').addEventListener('submit', submit_form);
 
   // By default, load the inbox
   load_mailbox('inbox');
@@ -30,6 +31,49 @@ function load_mailbox(mailbox) {
 
   // Show the mailbox name
   document.querySelector('#emails-view').innerHTML = `<h3>${mailbox.charAt(0).toUpperCase() + mailbox.slice(1)}</h3>`;
+
+  fetch(`/emails/${mailbox}`)
+  .then(response => response.json())
+  .then(emails => {
+      // Print emails
+      console.log(emails);
+
+      // foreach e-mail create an Element,
+
+      // If the email is unread, it should appear with a white background.
+
+      // If the email has been read, it should appear with a gray background.
+
+      // Each element should be clickable, surround by <a>
+      // The URL should be for the single view (Djando, int?)
+
+      // append that element
+      
+  });
+}
+
+function submit_form() {
+
+  // Capture values
+  // recipients, subject, and body
+  const recipients = document.querySelector('#compose-recipients').value;
+  const subject = document.querySelector('#compose-subject').value;
+  const body = document.querySelector('#compose-body').value;
+
+  // Send the values via Fetch to the API
+  fetch('/emails', {
+    method: 'POST',
+    body: JSON.stringify({
+        recipients: recipients,
+        subject: subject,
+        body: body
+    })
+  }).then() {
+    load_mailbox('sent');
+  }
+
+  // load the user’s sent mailbox.
+
 }
 
 // API Calls - GET
