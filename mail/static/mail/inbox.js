@@ -24,19 +24,40 @@ function compose_email() {
 }
 
 function load_mailbox(mailbox) {
+
+  const emailsView = document.querySelector('#emails-view')
   
   // Show the mailbox and hide other views
-  document.querySelector('#emails-view').style.display = 'block';
+  emailsView.style.display = 'block';
   document.querySelector('#compose-view').style.display = 'none';
 
   // Show the mailbox name
-  document.querySelector('#emails-view').innerHTML = `<h3>${mailbox.charAt(0).toUpperCase() + mailbox.slice(1)}</h3>`;
+  emailsView.innerHTML = `<h3>${mailbox.charAt(0).toUpperCase() + mailbox.slice(1)}</h3>`;
+
+  console.log( typeof mailbox, mailbox)
 
   fetch(`/emails/${mailbox}`)
   .then(response => response.json())
-  .then(emails => {
+  .then(result => {
       // Print emails
-      console.log(emails);
+      console.log(result);
+      result.forEach((mail) => {
+        
+        const mailTemplate =`
+          <a href="/emails/${mail.id}">
+            <div class="card">
+              <p><strong>Sender</strong>: ${mail.sender}</p>
+              <p><strong>Recipients</strong>: ${mail.recipients.join(',')}</p>
+            </div> 
+          </a>
+        `
+
+        emailsView.insertAdjacentHTML('beforeend', mailTemplate)
+      })
+
+      
+  });
+}
 
       // foreach e-mail create an Element,
 
@@ -49,10 +70,10 @@ function load_mailbox(mailbox) {
 
       // append that element
       
-  });
-}
 
-function submit_form() {
+function submit_form(e) {
+  console.log(e)
+  e.preventDefault();
 
   // Capture values
   // recipients, subject, and body
@@ -61,6 +82,8 @@ function submit_form() {
   const body = document.querySelector('#compose-body').value;
 
   // Send the values via Fetch to the API
+
+  // All recipients must also be valid users who have registered on this particular web application
   fetch('/emails', {
     method: 'POST',
     body: JSON.stringify({
@@ -68,9 +91,14 @@ function submit_form() {
         subject: subject,
         body: body
     })
-  }).then() {
-    load_mailbox('sent');
-  }
+  })
+  .then(response => response.json())
+  .then(result => {
+      // Print result
+      console.log(result);
+      load_mailbox('sent')
+  });
+  
 
   // load the user’s sent mailbox.
 
@@ -80,35 +108,35 @@ function submit_form() {
 // /emails/<mailbox> where mailbox is either inbox, sent or archive
 // GET /emails/<int:email_id> for a single email
 
-fetch('/emails/inbox')
-.then(response => response.json())
-.then(emails => {
-    // Print emails
-    console.log(emails);
+// fetch('/emails/inbox')
+// .then(response => response.json())
+// .then(emails => {
+//     // Print emails
+//     console.log(emails);
 
-    // ... do something else with emails ...
-});
+//     // ... do something else with emails ...
+// });
 
 // API Calls - POST
 // This needs the recipient, subject and body
-fetch('/emails', {
-  method: 'POST',
-  body: JSON.stringify({
-      recipients: 'baz@example.com',
-      subject: 'Meeting time',
-      body: 'How about we meet tomorrow at 3pm?'
-  })
-})
-.then(response => response.json())
-.then(result => {
-    // Print result
-    console.log(result);
-});
+// fetch('/emails', {
+//   method: 'POST',
+//   body: JSON.stringify({
+//       recipients: 'baz@example.com',
+//       subject: 'Meeting time',
+//       body: 'How about we meet tomorrow at 3pm?'
+//   })
+// })
+// .then(response => response.json())
+// .then(result => {
+//     // Print result
+//     console.log(result);
+// });
 
 // API Calls - PUT to mark emails as read/unread archived/unarchived
-fetch('/emails/100', {
-  method: 'PUT',
-  body: JSON.stringify({
-      archived: true
-  })
-})
+// fetch('/emails/100', {
+//   method: 'PUT',
+//   body: JSON.stringify({
+//       archived: true
+//   })
+// })
