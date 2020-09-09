@@ -11,6 +11,7 @@ document.addEventListener('DOMContentLoaded', function() {
   load_mailbox('inbox');
 });
 
+// The default aparameters assume an empty message
 function compose_email(subject='', recipients='', body='' ) {
 
   // Show compose view and hide other views
@@ -24,15 +25,18 @@ function compose_email(subject='', recipients='', body='' ) {
   document.querySelector('#compose-body').value = body;
 }
 
+// Creates the email element
 function renderEmail(id, mailbox) {
+
+  // Toggle the view
   document.querySelector('#single-email-view').style.display = 'block';
   document.querySelector('#emails-view').style.display = 'none';
+
   const singleEmailView = document.querySelector('#single-email-view .mail-container');
+
+  // Differnt inbox variable elements
   const archive = `
     <button class="btn archive">Archive</button>
-  `;
-  const unArchive = `
-    <button class="btn unarchive">Unarchive</button>
   `;
   const reply = `
     <button class="btn reply">Reply</button>
@@ -42,6 +46,7 @@ function renderEmail(id, mailbox) {
   fetch(`/emails/${id}`)
   .then(response => response.json())
   .then(result => {
+
     // Object destructuring assingment
     const {subject, sender, recipients, body} = result;
 
@@ -61,47 +66,30 @@ function renderEmail(id, mailbox) {
     `;
   })
 
-  // Dry those up!
   .then(() => {
-    if( mailbox === 'inbox' ) {
-      document.querySelectorAll('.single-email').forEach((email) => {
-        const emailSubject = email.querySelector('.email-subject').textContent;
-        const emailSender = email.querySelector('.email-sender p').textContent;
-        const emailBody = email.querySelector('.email-body p').textContent;
+    
+    // If inside of inbox, the archive button archives the e-mails
+    // Otherwise, unarchive the e-mails
+    const archived = mailbox === 'inbox' ? true : false;
+    archived ? email.querySelector('.archive').textContent = 'Archive' : email.querySelector('.archive').textContent = 'Unarchive'
+ 
+    document.querySelectorAll('.single-email').forEach((email) => {
+      const emailSubject = email.querySelector('.email-subject').textContent;
+      const emailSender = email.querySelector('.email-sender p').textContent;
+      const emailBody = email.querySelector('.email-body p').textContent;
 
-        email.insertAdjacentHTML('beforeend', archive)
-        email.insertAdjacentHTML('beforeend', reply)
-        email.querySelector('.reply').addEventListener('click', () => compose_email(emailSubject, emailSender, emailBody))
-        email.querySelector('.archive').addEventListener('click', function() {
-          fetch(`/emails/${id}`, {
-            method: 'PUT',
-            body: JSON.stringify({
-              archived: true
-            })
+      email.insertAdjacentHTML('beforeend', reply)
+      email.querySelector('.reply').addEventListener('click', () => compose_email(emailSubject, emailSender, emailBody))
+      email.querySelector('.archive').addEventListener('click', function() {
+        fetch(`/emails/${id}`, {
+          method: 'PUT',
+          body: JSON.stringify({
+            archived: archived
           })
-          .then(() => load_mailbox('inbox'))
         })
+        .then(() => load_mailbox('inbox'))
       })
-    } else if( mailbox === 'archive' ) {
-      document.querySelectorAll('.single-email').forEach((email) => {
-        const emailSubject = email.querySelector('.email-subject').textContent;
-        const emailSender = email.querySelector('.email-sender p').textContent;
-        const emailBody = email.querySelector('.email-body p').textContent;
-
-        email.insertAdjacentHTML('beforeend', unArchive)
-        email.insertAdjacentHTML('beforeend', reply)
-        email.querySelector('.reply').addEventListener('click', () => compose_email(emailSubject, emailSender, emailBody))
-        email.querySelector('.unarchive').addEventListener('click', function() {
-          fetch(`/emails/${id}`, {
-            method: 'PUT',
-            body: JSON.stringify({
-              archived: false
-            })
-          })
-          .then(() => load_mailbox('inbox'))
-        })
-      })
-    }
+    })
   })
 
   // If an email is clicked, also mark it as read
@@ -128,12 +116,13 @@ function load_mailbox(mailbox) {
   fetch(`/emails/${mailbox}`)
   .then(response => response.json())
   .then(result => {
+
     // Print emails
-    console.log(result);
     result.forEach((mail) => {
       // Read or Unread instead of true or false for legibility, as it used as a class for styling purposes
       const read = mail.read === true ? 'read' : 'unread' 
 
+      // Destructuring assingment
       const {id, sender, subject, recipients} = mail;
       
       const mailTemplate =`
@@ -149,14 +138,13 @@ function load_mailbox(mailbox) {
     // Add event listeners to each email to load the single email view
     document.querySelectorAll('.email').forEach((email) => {
       email.addEventListener('click', function(){
-        return renderEmail( this.dataset.id, mailbox );
+        renderEmail( this.dataset.id, mailbox );
       })
     })
   });
 }
 
 function submit_form(e) {
-  console.log(e)
   e.preventDefault();
 
   // Capture values
@@ -174,7 +162,6 @@ function submit_form(e) {
   })
   .then(response => response.json())
   .then(result => {
-      console.log(result);
       load_mailbox('sent')
   });
 }
